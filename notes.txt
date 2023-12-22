@@ -1,0 +1,4 @@
+Steps:
+1. Make 1d solver
+ 
+2. Make 2d solver
