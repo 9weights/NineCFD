@@ -45,10 +45,17 @@ class Matrix //class to keep matrix contiguous as opposed to vec of vec on stack
             (*this)(i,0) = data[i];// may have runtime conversion error here
         }
     }
-    void resize()
+    void resize(double initialValue)
     {
-
+        m_length *= 2; // maybe too generous. consider replacing assignment with pushback
+        m_jLength *= 2;
+        m_data.resize(m_length, initialValue);
+        
     }
+
+
+    int iLength() {return m_iLength;}
+    int jLength() {return m_jLength;}
 };
 
 void solve()
@@ -62,24 +69,22 @@ void solve()
     double timestep{1}; // needs time step for each variable later
     double courant{timestep / gridCellLength};
     //##INITIAL VALUES
-    double initialFlowValue{20};
-    std::vector<double> initialVelocities(gridCount, initialFlowValue);
+    double initialCondition{20};
+    std::vector<double> initialVelocities(gridCount, initialCondition);
     Matrix velocities{initialVelocities, 100};
-
-
-
+    double eps{1e-3};
     
     //#SOLVE
     //Burgers equation, non - conservative form
-    double boundaryCondition{initialFlowValue};
+    double boundaryCondition{initialCondition};
     int temporalIndex{1};
     bool isConverge{false};
-    std::vector<double> residuals(gridCount);
     while (!isConverge)
     {
+        std::vector<double> residuals(gridCount);
         for (auto i{0}; i < gridCount; ++i)
         {
-            if (i == 0)
+            if (i == 0) //assume wave speed > 0
             {
                 velocities(i,temporalIndex) = boundaryCondition;
                 continue;
@@ -88,23 +93,20 @@ void solve()
                 -courant * (velocities(i,temporalIndex) 
                 * (velocities(i,temporalIndex) - velocities(i - 1,temporalIndex)))
                 + velocities(i,temporalIndex); 
-            residuals[i] = velocities(i,temporalIndex) - velocites(i, temporalIndex - 1);
+            residuals[i] = velocities(i,temporalIndex) - velocities(i, temporalIndex - 1);
             // could save memory by having only 1 vel vector and iterating backwards
         }
         //##CHECK CONVERGENCE
+        double residualSum{0};
         for (auto residual : residuals)
         {
             residualSum += residual;
         }
-        residualMean = residualSum / gridCount;
-        temporalIndex++;
+        double residualMean{residualSum / gridCount};
+        if (residualMean < eps) isConverge = true;
+        else temporalIndex++;
+        if (temporalIndex == velocities.jLength()) velocities.resize(initialCondition);
     }
-    //bool isConverge{false};
-    //while (!isConverge)
-    //{
-    //    
-    //}
-
 }
 
 
