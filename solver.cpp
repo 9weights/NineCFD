@@ -25,24 +25,24 @@ class Matrix //class to keep matrix contiguous as opposed to vec of vec on stack
     : m_iLength{static_cast<int>(data.size())}
     , m_jLength{jLength}
     {
-        this->initialiseData(data);
         m_length = m_iLength * m_jLength;
+        m_data.reserve(m_length);
+        m_data.resize(m_length); // can change to pushback in initialiseData later
+        initialiseData(data);
     }
 
     Matrix operator*();
     Matrix operator+(Matrix matrix);
     double& operator()(int i, int j)
     {
-        assert(i >= 0 && i < m_iLength && "i subscript out of range");
-        assert(j >= 0 && j < m_jLength && "j subscript out of range");
-        return m_data[i + j * m_iLength];
+        return dataValue(i,j);
     }
     void initialiseData(const std::vector<double>& data)
     {
         assert(static_cast<int>(data.size()) == m_iLength && "vector size mismatch");
         for (auto i{0}; i < m_iLength; ++i)
         {
-            (*this)(i,0) = data[i];// may have runtime conversion error here
+            dataValue(i,0) = data[i];// may have runtime conversion error here
         }
     }
     void resize(double initialValue = 0)
@@ -62,6 +62,12 @@ class Matrix //class to keep matrix contiguous as opposed to vec of vec on stack
 
     int iLength() {return m_iLength;}
     int jLength() {return m_jLength;}
+    double& dataValue(int i, int j) 
+    {
+        assert(i >= 0 && i < m_iLength && "i subscript out of range");
+        assert(j >= 0 && j < m_jLength && "j subscript out of range");
+        return m_data[i + j * m_iLength];
+    }
 };
 
 void solve()
@@ -100,7 +106,8 @@ void solve()
                 * (velocities(i,temporalIndex) - velocities(i - 1,temporalIndex)))
                 + velocities(i,temporalIndex); 
             residuals[i] = velocities(i,temporalIndex) - velocities(i, temporalIndex - 1);
-            if (i + 1 == gridCount) std::cout << velocities(i)
+            std::cout << velocities(i,temporalIndex) << " ";
+            if (i + 1 == gridCount) std::cout << "\n";
             // could save memory by having only 1 vel vector and iterating backwards
         }
         //##CHECK CONVERGENCE

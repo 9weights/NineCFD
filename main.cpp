@@ -6,6 +6,6 @@ int main()
     // Solve
     // FOU
     solve();
-    int test{};
+    // draw here
     return 0;
 }
