@@ -45,14 +45,20 @@ class Matrix //class to keep matrix contiguous as opposed to vec of vec on stack
             (*this)(i,0) = data[i];// may have runtime conversion error here
         }
     }
-    void resize(double initialValue)
+    void resize(double initialValue = 0)
     {
         m_length *= 2; // maybe too generous. consider replacing assignment with pushback
         m_jLength *= 2;
         m_data.resize(m_length, initialValue);
-        
     }
+    void trim(int j)
+    {
+        m_data.resize((j + 1) * m_iLength);
+    }
+    void print(int direction)
+    {
 
+    }
 
     int iLength() {return m_iLength;}
     int jLength() {return m_jLength;}
@@ -94,6 +100,7 @@ void solve()
                 * (velocities(i,temporalIndex) - velocities(i - 1,temporalIndex)))
                 + velocities(i,temporalIndex); 
             residuals[i] = velocities(i,temporalIndex) - velocities(i, temporalIndex - 1);
+            if (i + 1 == gridCount) std::cout << velocities(i)
             // could save memory by having only 1 vel vector and iterating backwards
         }
         //##CHECK CONVERGENCE
@@ -103,9 +110,16 @@ void solve()
             residualSum += residual;
         }
         double residualMean{residualSum / gridCount};
-        if (residualMean < eps) isConverge = true;
-        else temporalIndex++;
-        if (temporalIndex == velocities.jLength()) velocities.resize(initialCondition);
+        if (residualMean < eps) 
+        {
+            isConverge = true;
+            velocities.trim(temporalIndex);
+        }
+        else 
+        {
+            temporalIndex++;
+            if (temporalIndex == velocities.jLength()) velocities.resize(initialCondition);
+        }
     }
 }
 

@@ -1,4 +1,9 @@
 Steps:
 1. Make 1d solver
- 
+ensure burgers works (terminal print output)
+implement raylib as gui
+euler fou
 2. Make 2d solver
+    // Euler FOU
+    // Assume incompressible inviscid (euler equations)
+use opengl as gui
