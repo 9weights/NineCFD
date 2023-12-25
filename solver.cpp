@@ -2,6 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <cassert>
+#include <cmath>
 // make user input later
 //
 
@@ -55,9 +56,13 @@ class Matrix //class to keep matrix contiguous as opposed to vec of vec on stack
     {
         m_data.resize((j + 1) * m_iLength);
     }
-    void print(int direction)
+    void print()
     {
-
+        for (auto datum : m_data)
+        {
+            std::cout << datum << " ";
+        }
+        std::cout << "\n";
     }
 
     int iLength() {return m_iLength;}
@@ -78,17 +83,18 @@ void solve()
     int gridCount{10};
     double domainLength{10};
     double gridCellLength{domainLength / gridCount}; // will make property of class grid later if needed
-    double timestep{1}; // needs time step for each variable later
+    double timestep{0.01}; // needs time step for each variable later
     double courant{timestep / gridCellLength};
     //##INITIAL VALUES
-    double initialCondition{20};
+    double initialCondition{0};
+    double boundaryCondition{2}; // inflow for now
     std::vector<double> initialVelocities(gridCount, initialCondition);
+    initialVelocities[0] = boundaryCondition; // move this before loop in future work
     Matrix velocities{initialVelocities, 100};
     double eps{1e-3};
     
     //#SOLVE
     //Burgers equation, non - conservative form
-    double boundaryCondition{initialCondition};
     int temporalIndex{1};
     bool isConverge{false};
     while (!isConverge)
@@ -99,14 +105,15 @@ void solve()
             if (i == 0) //assume wave speed > 0
             {
                 velocities(i,temporalIndex) = boundaryCondition;
+                std::cout << velocities(i,temporalIndex) << " ";
                 continue;
             }
             velocities(i,temporalIndex) =
-                -courant * (velocities(i,temporalIndex) 
-                * (velocities(i,temporalIndex) - velocities(i - 1,temporalIndex)))
-                + velocities(i,temporalIndex); 
-            residuals[i] = velocities(i,temporalIndex) - velocities(i, temporalIndex - 1);
+                -courant * (velocities(i - 1,temporalIndex - 1) 
+                * (velocities(i,temporalIndex - 1) - velocities(i - 1,temporalIndex - 1)))
+                + velocities(i,temporalIndex - 1); 
             std::cout << velocities(i,temporalIndex) << " ";
+            residuals[i] = velocities(i,temporalIndex) - velocities(i, temporalIndex - 1);
             if (i + 1 == gridCount) std::cout << "\n";
             // could save memory by having only 1 vel vector and iterating backwards
         }
@@ -117,8 +124,9 @@ void solve()
             residualSum += residual;
         }
         double residualMean{residualSum / gridCount};
-        if (residualMean < eps) 
+        if (std::abs(residualMean) < eps) 
         {
+            std::cout << temporalIndex << std::endl;
             isConverge = true;
             velocities.trim(temporalIndex);
         }
